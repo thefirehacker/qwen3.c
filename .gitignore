@@ -54,3 +54,10 @@ dkms.conf
 # gguf files
 
 *.gguf
+
+# Compiled binaries
+run
+runomp
+runba
+runbaomp
+runcublas
