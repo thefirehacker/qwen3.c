@@ -1063,8 +1063,8 @@ int main(int argc, char *argv[]) {
     char *prompt = NULL;        // prompt string
     unsigned long long rng_seed = 0; // seed rng with time by default
     char *system_prompt = NULL; // the (optional) system prompt to use in chat mode
-    int multi_turn = 0;  // multi-turn conversation
-    int think_on = 0;    //  reasoning on
+    int multi_turn = 1;  // multi-turn conversation
+    int think_on = 1;    //  reasoning on
     int tps = 0;         // TPS
     int ttft = 0;        // TTFT
 
