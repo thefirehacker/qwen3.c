@@ -994,7 +994,6 @@ long time_in_ms() {
 void read_stdin(const char* guide, char* buffer, size_t bufsize) {
     // read a line from stdin, up to but not including \n
     printf("%s", guide);
-    fflush(stdout);
     if (fgets(buffer, bufsize, stdin) != NULL) {
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len - 1] == '\n') {
@@ -1076,12 +1075,18 @@ void chat(Transformer* transformer, Tokenizer* tokenizer, Sampler* sampler, char
 
         // copy raw logits before sample() mutates them (for viz)
         float* raw_logits_copy = NULL;
-        if (viz) {
+        if (viz && pos >= (multi_turn ? (int)tb->size : num_prompt_tokens)) {
             raw_logits_copy = malloc(sampler->vocab_size * sizeof(float));
             memcpy(raw_logits_copy, logits, sampler->vocab_size * sizeof(float));
         }
 
         next = sample(sampler, logits);
+
+        // emit visualization event on decode steps
+        if (raw_logits_copy) {
+            emit_sample_event(sampler, raw_logits_copy, next, pos);
+            free(raw_logits_copy);
+        }
 
         pos++;
         //printf("num_prompt_tokens: %d \n", num_prompt_tokens);
@@ -1090,13 +1095,6 @@ void chat(Transformer* transformer, Tokenizer* tokenizer, Sampler* sampler, char
             if (multi_turn) {
                 append_tokens(tb, &next, 1);
                 //printf("next token: %d\n",  next);
-            }
-
-            // emit visualization event on decode steps
-            if (raw_logits_copy) {
-                emit_sample_event(sampler, raw_logits_copy, next, pos);
-                free(raw_logits_copy);
-                raw_logits_copy = NULL;
             }
             
             if (next == 151645) { // EOS token ID - TODO
@@ -1129,8 +1127,6 @@ void chat(Transformer* transformer, Tokenizer* tokenizer, Sampler* sampler, char
                 }
             }
         }
-        // free logits copy if not emitted (prefill steps)
-        if (raw_logits_copy) { free(raw_logits_copy); }
     }
 }
 
@@ -1153,8 +1149,6 @@ void error_usage() {
 
 
 int main(int argc, char *argv[]) {
-    setvbuf(stdout, NULL, _IOLBF, 0);
-
     // default parameters
     char *checkpoint_path = NULL;  // e.g. out/model.bin
     float temperature = 0.6f;   // 0.0 = greedy deterministic. 1.0 = original. don't set higher

@@ -106,6 +106,64 @@ tok/s: 6.686930
 - [X] CUDA version - I adapted the inference code for CUDA. You can check out https://github.com/gigit0000/qwen3.cu
 - [ ] Accelerated versions
 
+## Sampling Visualization
+
+A live dashboard that shows how **temperature** and **top-p** affect token selection in real time. See probability bars, nucleus membership, and which token gets chosen — all from actual model logits.
+
+### Build
+
+```sh
+make runviz
+```
+
+### Run (3 terminals)
+
+**Terminal 1** — Start the Next.js dashboard:
+```sh
+cd ../../apps/sampling-viz
+npm install   # first time only
+npm run dev
+```
+
+**Terminal 2** — Start the bridge + inference with viz enabled:
+```sh
+# Install bridge dependency (first time only)
+cd ../../tools && npm install && cd -
+
+# Run with visualization hook
+node ../../tools/sampling-bridge.mjs ./run_viz Qwen3-0.6B-FP32.gguf -v 1 -t 0.6 -p 0.95
+```
+
+**Browser** — Open http://localhost:3000
+
+Then interact with the chat in Terminal 2. Each generated token streams a sampling event to the dashboard showing:
+- Top-20 token probabilities (bar chart)
+- Nucleus membership (green = in, gray = excluded by top-p)
+- Chosen token highlighted in gold
+- Nucleus stats (size, mass, tail excluded)
+
+### Experiment
+
+Try different temperature and top-p values to see the effect:
+```sh
+# Very deterministic — top token dominates
+node ../../tools/sampling-bridge.mjs ./run_viz Qwen3-0.6B-FP32.gguf -v 1 -t 0.2 -p 0.95
+
+# High randomness — flat distribution
+node ../../tools/sampling-bridge.mjs ./run_viz Qwen3-0.6B-FP32.gguf -v 1 -t 1.2 -p 0.95
+
+# Tight nucleus — few tokens eligible
+node ../../tools/sampling-bridge.mjs ./run_viz Qwen3-0.6B-FP32.gguf -v 1 -t 0.6 -p 0.5
+```
+
+### How it works
+
+1. `run_viz` (compiled from `run.c` with `-v 1`) emits JSONL sampling events to stderr on each decode step
+2. `tools/sampling-bridge.mjs` parses these events and broadcasts via WebSocket (port 3847)
+3. `apps/sampling-viz/` (Next.js) connects to the WebSocket and renders live charts
+
+The `-v` flag is off by default — when disabled, `run_viz` behaves identically to `run` with zero overhead.
+
 ## Acknoledgement
 - Inspired and baselined from Andrej Kapathy's [llama2.c](https://github.com/karpathy/llama2.c)
 - [llama.cpp](https://github.com/ggml-org/llama.cpp)

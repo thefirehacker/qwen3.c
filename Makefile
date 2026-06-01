@@ -42,6 +42,10 @@ runba: runba.c
 runbaomp: runba.c
 	$(CC) -O3 -fopenmp -march=native runba.c  -lm  -o runba
 
+.PHONY: runviz
+runviz: run.c
+	$(CC) -O3 -o run_viz run.c -lm
+
 .PHONY: clean
 clean:
-	rm -f run
+	rm -f run run_viz

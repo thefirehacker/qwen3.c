@@ -57,7 +57,9 @@ dkms.conf
 
 # Compiled binaries
 run
+run_viz
 runomp
 runba
 runbaomp
 runcublas
+run_viz
