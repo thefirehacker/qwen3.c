@@ -108,7 +108,9 @@ tok/s: 6.686930
 
 ## Sampling Visualization
 
-A live dashboard that shows how **temperature** and **top-p** affect token selection in real time. See probability bars, nucleus membership, and which token gets chosen — all from actual model logits.
+> Built for [**First Break AI Cohort**](https://cohort.bubblnet.com/) Step 2 — Understanding How LLMs Choose Tokens.
+
+A live dashboard that shows how **temperature** and **top-p** affect token selection in real time. See probability bars, nucleus membership, and which token gets chosen — all from actual model logits. Click any generated token to replay its full sampling state.
 
 ### Build
 
